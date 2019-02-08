@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">ExchangeRates</string>
+    <string name="item_bid">bid: %1$f</string>
+    <string name="item_ask">ask: %1$f</string>
+    <string name="item_update">Updated: %1$d sec. ago</string>
+    <string name="error_connection">Please check internet connection</string>
+    <string name="error_server">Server exception, retry later</string>
+    <string name="error_unexpected">Unexpected exception, retry later</string>
+    <string name="retry">Retry</string>
 </resources>

@@ -7,6 +7,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 const val FOREX_URL = "https://forex.1forge.com/"
@@ -26,7 +27,7 @@ class ExchangeApp : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-
+        Timber.plant(Timber.DebugTree())
         val client = OkHttpClient.Builder()
             .readTimeout(60, TimeUnit.SECONDS)
             .connectTimeout(50, TimeUnit.SECONDS)

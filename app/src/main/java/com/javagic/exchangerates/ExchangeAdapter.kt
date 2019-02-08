@@ -1,22 +1,26 @@
 package com.javagic.exchangerates
 
 import android.view.View
-import com.javagic.exchangerates.api.ExchangeItemApi
+import com.javagic.exchangerates.api.ExchangeItem
 import kotlinx.android.synthetic.main.item_exhchange.view.*
 
-class ExchangeAdapter : RecyclerViewAdapter<ExchangeItemApi>(
-    R.layout.item_exhchange,
+class ExchangeAdapter : RecyclerViewAdapter<ExchangeItem>(
+    itemRes = R.layout.item_exhchange,
     holderFactory = { ExchangeViewHolder(it) }
 ) {
-    class ExchangeViewHolder(view: View) : RecyclerViewAdapter.ViewHolder<ExchangeItemApi>(view) {
-        override fun bind(item: ExchangeItemApi) {
-            with(view) {
-                tvPair.text = item.symbol
-                tvBid.text = item.bid.toString()
-                tvAsk.text = item.ask.toString()
-                tvPrice.text = item.price.toString()
+    class ExchangeViewHolder(view: View) : RecyclerViewAdapter.ViewHolder<ExchangeItem>(view) {
+        override fun bind(item: ExchangeItem) = with(view) {
+            with(item) {
+                tvPair.text = symbol
+                tvBid.text = context.getString(R.string.item_bid, bid)
+                tvAsk.text = context.getString(R.string.item_ask, ask)
+                tvPrice.text = price.toString()
+                tvTimestamp.text = if (timestamp == 0L) ""
+                else context.getString(
+                    R.string.item_update,
+                    (System.currentTimeMillis() / 1000) - timestamp
+                )
             }
         }
-
     }
 }

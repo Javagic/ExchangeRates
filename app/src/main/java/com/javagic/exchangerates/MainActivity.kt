@@ -1,44 +1,136 @@
 package com.javagic.exchangerates
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import android.view.View
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView.NO_POSITION
+import androidx.recyclerview.widget.RecyclerView.VERTICAL
+import com.javagic.exchangerates.api.BaseActivity
+import io.reactivex.Observable
+import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_main.*
+import timber.log.Timber
+import java.util.concurrent.TimeUnit
 
-class MainActivity : AppCompatActivity() {
-    private val viewModel by lazy { ViewModelProviders.of(this)[MainViewModel::class.java] }
+open class MainActivity : BaseActivity<MainViewModel>() {
+    override fun provideViewModel(): MainViewModel = viewModelBundleAware()
+
     private val exchangeAdapter = ExchangeAdapter()
+    private val layoutManager by lazy {
+        LinearLayoutManager(this@MainActivity)
+    }
 
+    private val disposable = CompositeDisposable()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_main)
+        if (savedInstanceState == null) viewModel.init()
         with(rvExchanges) {
             setHasFixedSize(true)
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            itemAnimator = itemAnimator
+            layoutManager = this@MainActivity.layoutManager
+            itemAnimator = DefaultItemAnimator()
             adapter = exchangeAdapter
-            addItemDecoration(ItemDecorator(R.drawable.divider_exchange))
+            addItemDecoration(DividerItemDecoration(this@MainActivity, VERTICAL).apply {
+                setDrawable(
+                    ContextCompat.getDrawable(
+                        ExchangeApp.instance, R.drawable.divider_exchange
+                    )!!
+                )
+            })
         }
-        viewModel.pairs.observeApiResponse({
-
-        },{
-
-        })
-        btnClick.setOnClickListener {
-            viewModel.call()
-        }
-    }
-
-    protected fun <T> ResData<T>.observeApiResponse(onSuccess: (T) -> Unit, onError: (Throwable) -> Unit = {}) {
-        observe(this@MainActivity, Observer {
-            if (it == null) return@Observer
-            when (it) {
-                is ApiResponse.Success -> onSuccess(it.data)
-                is ApiResponse.Error -> onError(it.exception)
+        with(viewModel) {
+            error.observe {
+                if (it != null) {
+                    tvError.text = it.message
+                    tvError.visible = true
+                    btnRetry.visible = true
+                } else {
+                    tvError.visible = false
+                    btnRetry.visible = false
+                }
             }
+            btnRetry.setOnClickListener {
+                loadSymbols()
+            }
+        }
+
+        viewModel.exchangeList.observe {
+            exchangeAdapter.submitList(it)
+            startObserving()
+        }
+    }
+
+
+    private fun startObserving() {
+        Observable.interval(20, TimeUnit.SECONDS)
+            .subscribe {
+                with(layoutManager) {
+                    quotes(findFirstVisibleItemPosition()..findLastVisibleItemPosition())
+                }
+            }
+            .also { disposable.add(it) }
+    }
+
+    private fun quotes(intRange: IntRange) {
+        Timber.i(intRange.toString())
+        if (intRange.first == NO_POSITION) return
+        viewModel.requestQuotes(intRange)
+            .subscribe({ newList ->
+                intRange.forEach { exchangeAdapter.data[it] = newList[it - intRange.first] }
+                exchangeAdapter.notifyItemRangeChanged(intRange.first, intRange.count())
+            }, {
+
+            })
+            .also { disposable.add(it) }
+    }
+
+    var View.visible: Boolean
+        get() = visibility == View.VISIBLE
+        set(value) {
+            visibility = if (value) View.VISIBLE else View.GONE
+        }
+
+
+    private fun <T> LiveData<T>.observe(block: (T) -> Unit) {
+        observe(this@MainActivity, Observer {
+            block(it)
         })
     }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+        outState?.let {
+            viewModel.writeTo(it)
+        }
+    }
+
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+        super.onRestoreInstanceState(savedInstanceState)
+        savedInstanceState?.let {
+            viewModel.readFrom(it)
+        }
+    }
+
+    override fun onBackPressed() {
+        moveTaskToBack(false)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        disposable.clear()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (exchangeAdapter.data.isNotEmpty()) {
+            startObserving()
+        }
+    }
+
 }
