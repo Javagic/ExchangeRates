@@ -1,4 +1,4 @@
-package com.javagic.exchangerates
+package com.javagic.exchangerates.base
 
 import android.os.Bundle
 

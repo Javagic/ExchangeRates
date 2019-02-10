@@ -37,11 +37,6 @@ class ExchangeApp : Application() {
                     newBuilder().url(newUrl).build().let { chain.proceed(it) }
                 }
             }
-            .addInterceptor(HttpLoggingInterceptor(HttpLoggingInterceptor.Logger {
-                //                Timber.tag()
-            }).apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            })
             .build()
         val retrofit = Retrofit.Builder()
             .baseUrl(FOREX_URL)

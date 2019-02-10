@@ -20,17 +20,6 @@ object ExchangeRepository {
     fun quotes(pair: String): Single<List<ExchangeItem>> =
         api.quotes(pair)
             .subscribeOn(Schedulers.io())
-            .map {
-                it.map {
-                    ExchangeItem(
-                        it.symbol,
-                        it.price,
-                        it.bid,
-                        it.ask,
-                        it.timestamp
-                    )
-                }
-            }
 
     private fun <T> Single<T>.checkExceptions() =
         onErrorResumeNext { throwable: Throwable ->

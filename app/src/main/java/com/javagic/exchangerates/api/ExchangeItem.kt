@@ -2,14 +2,15 @@ package com.javagic.exchangerates.api
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.google.gson.annotations.SerializedName
 
 
 class ExchangeItem(
-    val symbol: String,
-    var price: Double = 0.0,
-    var bid: Double = 0.0,
-    var ask: Double = 0.0,
-    var timestamp: Long = 0
+    @SerializedName("symbol") val symbol: String,
+    @SerializedName("price") var price: Double = 0.0,
+    @SerializedName("bid") var bid: Double = 0.0,
+    @SerializedName("ask") var ask: Double = 0.0,
+    @SerializedName("timestamp") var timestamp: Long = 0
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString(),

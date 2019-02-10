@@ -8,7 +8,7 @@ import retrofit2.http.Query
 interface ForexApi {
 
     @GET("$API_VERSION/quotes")
-    fun quotes(@Query("pairs") pairs: String): Single<List<ExchangeItemApi>>
+    fun quotes(@Query("pairs") pairs: String): Single<List<ExchangeItem>>
 
     @GET("$API_VERSION/symbols")
     fun pairs(): Single<List<String>>

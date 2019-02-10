@@ -1,4 +1,4 @@
-package com.javagic.exchangerates
+package com.javagic.exchangerates.main
 
 import android.os.Bundle
 import androidx.lifecycle.LiveData
@@ -7,10 +7,12 @@ import androidx.lifecycle.ViewModel
 import com.javagic.exchangerates.api.ApiException
 import com.javagic.exchangerates.api.ExchangeItem
 import com.javagic.exchangerates.api.ExchangeRepository
+import com.javagic.exchangerates.base.ParcelableViewModel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 
 private const val EXCHANGE_LIST_EXTRA = "MainViewModel.ExchangeList"
+private const val EXCEPTION_EXTRA = "MainViewModel.ExchangeList"
 
 class MainViewModel : ViewModel(), ParcelableViewModel {
     override fun init() {
@@ -23,17 +25,6 @@ class MainViewModel : ViewModel(), ParcelableViewModel {
 
     private val _error: MutableLiveData<ApiException?> = MutableLiveData()
     val error: LiveData<ApiException?> = _error
-
-    override fun writeTo(bundle: Bundle) {
-        bundle.putParcelableArrayList(EXCHANGE_LIST_EXTRA, _exchangeList.value!!)
-    }
-
-    override fun readFrom(bundle: Bundle?) {
-        bundle?.apply {
-            getParcelableArrayList<ExchangeItem>(EXCHANGE_LIST_EXTRA)
-                .also(_exchangeList::postValue)
-        }
-    }
 
     fun loadSymbols() {
         ExchangeRepository.symbols()
@@ -62,4 +53,21 @@ class MainViewModel : ViewModel(), ParcelableViewModel {
         disposable.clear()
     }
 
+    override fun writeTo(bundle: Bundle) {
+        _exchangeList.value?.let {
+            bundle.putParcelableArrayList(EXCHANGE_LIST_EXTRA, it)
+        }
+        _error.value?.let {
+            bundle.putParcelable(EXCEPTION_EXTRA, it)
+        }
+    }
+
+    override fun readFrom(bundle: Bundle?) {
+        bundle?.apply {
+            getParcelableArrayList<ExchangeItem>(EXCHANGE_LIST_EXTRA)
+                .also(_exchangeList::postValue)
+            getParcelable<ApiException>(EXCEPTION_EXTRA)
+                .also(_error::postValue)
+        }
+    }
 }

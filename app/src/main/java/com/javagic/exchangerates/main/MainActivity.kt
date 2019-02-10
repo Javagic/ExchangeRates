@@ -1,16 +1,16 @@
-package com.javagic.exchangerates
+package com.javagic.exchangerates.main
 
 import android.os.Bundle
-import android.view.View
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.NO_POSITION
 import androidx.recyclerview.widget.RecyclerView.VERTICAL
-import com.javagic.exchangerates.api.BaseActivity
+import androidx.recyclerview.widget.SimpleItemAnimator
+import com.javagic.exchangerates.ExchangeApp
+import com.javagic.exchangerates.R
+import com.javagic.exchangerates.base.BaseActivity
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_main.*
@@ -18,7 +18,7 @@ import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 open class MainActivity : BaseActivity<MainViewModel>() {
-    override fun provideViewModel(): MainViewModel = viewModelBundleAware()
+    override fun provideViewModel(): MainViewModel = viewModel()
 
     private val exchangeAdapter = ExchangeAdapter()
     private val layoutManager by lazy {
@@ -38,10 +38,12 @@ open class MainActivity : BaseActivity<MainViewModel>() {
             addItemDecoration(DividerItemDecoration(this@MainActivity, VERTICAL).apply {
                 setDrawable(
                     ContextCompat.getDrawable(
-                        ExchangeApp.instance, R.drawable.divider_exchange
+                        ExchangeApp.instance,
+                        R.drawable.divider_exchange
                     )!!
                 )
             })
+            (itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
         }
         with(viewModel) {
             error.observe {
@@ -59,7 +61,7 @@ open class MainActivity : BaseActivity<MainViewModel>() {
             }
         }
 
-        viewModel.exchangeList.observe {
+        viewModel.exchangeList.observeNotNull {
             exchangeAdapter.submitList(it)
             startObserving()
         }
@@ -67,7 +69,7 @@ open class MainActivity : BaseActivity<MainViewModel>() {
 
 
     private fun startObserving() {
-        Observable.interval(20, TimeUnit.SECONDS)
+        Observable.interval(2, TimeUnit.SECONDS)
             .subscribe {
                 with(layoutManager) {
                     quotes(findFirstVisibleItemPosition()..findLastVisibleItemPosition())
@@ -83,23 +85,8 @@ open class MainActivity : BaseActivity<MainViewModel>() {
             .subscribe({ newList ->
                 intRange.forEach { exchangeAdapter.data[it] = newList[it - intRange.first] }
                 exchangeAdapter.notifyItemRangeChanged(intRange.first, intRange.count())
-            }, {
-
-            })
+            }, Throwable::printStackTrace)
             .also { disposable.add(it) }
-    }
-
-    var View.visible: Boolean
-        get() = visibility == View.VISIBLE
-        set(value) {
-            visibility = if (value) View.VISIBLE else View.GONE
-        }
-
-
-    private fun <T> LiveData<T>.observe(block: (T) -> Unit) {
-        observe(this@MainActivity, Observer {
-            block(it)
-        })
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -108,7 +95,6 @@ open class MainActivity : BaseActivity<MainViewModel>() {
             viewModel.writeTo(it)
         }
     }
-
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
         super.onRestoreInstanceState(savedInstanceState)

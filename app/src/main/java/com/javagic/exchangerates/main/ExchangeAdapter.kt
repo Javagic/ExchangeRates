@@ -1,7 +1,9 @@
-package com.javagic.exchangerates
+package com.javagic.exchangerates.main
 
 import android.view.View
+import com.javagic.exchangerates.R
 import com.javagic.exchangerates.api.ExchangeItem
+import com.javagic.exchangerates.base.RecyclerViewAdapter
 import kotlinx.android.synthetic.main.item_exhchange.view.*
 
 class ExchangeAdapter : RecyclerViewAdapter<ExchangeItem>(

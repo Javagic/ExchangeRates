@@ -1,4 +1,4 @@
-package com.javagic.exchangerates
+package com.javagic.exchangerates.base
 
 import android.view.LayoutInflater
 import android.view.View
@@ -10,8 +10,6 @@ open class RecyclerViewAdapter<T>(
     @LayoutRes private val itemRes: Int,
     private val holderFactory: (View) -> ViewHolder<T>
 ) : RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder<T>>() {
-
-
     val data: MutableList<T> = ArrayList()
 
     fun submitList(value: List<T>) {
