@@ -40,6 +40,7 @@ open class MainActivity : BaseActivity<MainViewModel>() {
                     ContextCompat.getDrawable(
                         ExchangeApp.instance,
                         R.drawable.divider_exchange
+                    asdasdad
                     )!!
                 )
             })
